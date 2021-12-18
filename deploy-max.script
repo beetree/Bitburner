@@ -1,0 +1,9 @@
+print("Deploying " + args[0] + " to " + args[1]);
+
+scp(args[0], args[1]);
+killall(args[1]);
+
+maxScript = Math.floor(getServerMaxRam(args[1])/getScriptRam(args[0]));
+print("Max scripts on server " + args[1] + " is " + maxScript);
+
+exec(args[0], args[1], maxScript);
