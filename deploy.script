@@ -1,3 +1,64 @@
+
+var file = args[0];
+var ram = args[1];
+
+print("Deploying " + file + " to all servers, and (re)starting servers with ram " + ram);
+
+
+/*
+hosts = ["home"];
+
+print(hosts);
+
+for(var i = 0; i < hosts.length; i++) {
+  newHosts = scan(hosts[i]);
+  for(var j = 0; j < newHosts.length; j++) {
+    if( (hosts.includes(newHosts[j]) == false) && (newHosts[j] != "home") && (newHosts[j].substring(0, 13) != "player-server") ) {
+      hosts.push(newHosts[j]);
+    }
+  }
+}
+
+for(var i = 0; i < hosts.length; i++) {
+  print(hosts[i]);
+}
+*/
+
+
+for(var i = 0; i < 2; i++) {
+  server = "player-server-" + i;
+  if(serverExists(server) == false) {
+    print("Server does not exist: " + server);
+    
+    while(getServerMoneyAvailable("home") < getPurchasedServerCost(ram)) {
+      print("Not enough money to purchase server, sleeping...");
+      sleep(5000);
+    }
+    purchaseServer(server, ram);
+    scp(file, server);
+    maxScript = Math.floor(getServerMaxRam(server)/getScriptRam(file));
+    exec(file, server, maxScript);      
+  }
+}
+
+while(true);
+
+
+/*
+Delete all servers:
+
+servers = getPurchasedServers();
+print(servers);
+for(var i = 0; i < servers.length; i++) {
+  deleteServer(servers[i]);
+}
+while(true);
+
+*/
+
+
+
+
 var ram = 8;
 
 var i = 0;
@@ -10,3 +71,25 @@ while (i < getPurchasedServerLimit()) {
         ++i;
     }
 }
+
+
+
+var file = args[0];
+var target = args[1];
+
+print("Deploying " + file + " to " + target);
+
+if(hasRootAccess(target) == false) {
+	if(fileExists("BruteSSH.exe", "home")) {
+		brutessh(target);
+	}
+	nuke(target);
+}
+
+scp(file, target);
+killall(target);
+
+maxScript = Math.floor(getServerMaxRam(target)/getScriptRam(file));
+print("Max scripts on server " + target + " is " + maxScript);
+
+exec(file, target, maxScript);
