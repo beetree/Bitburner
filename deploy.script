@@ -1,14 +1,14 @@
-
 var file = args[0];
 var ram = args[1];
 
 print("Deploying " + file + " to all servers, and (re)starting servers with ram " + ram);
 
+//servers = getPurchasedServers();
+//print(servers);
+//deleteServer("player-server-0-0");
 
-/*
+
 hosts = ["home"];
-
-print(hosts);
 
 for(var i = 0; i < hosts.length; i++) {
   newHosts = scan(hosts[i]);
@@ -19,77 +19,66 @@ for(var i = 0; i < hosts.length; i++) {
   }
 }
 
+hosts.shift(); //Remove first element "home"
+
+
 for(var i = 0; i < hosts.length; i++) {
-  print(hosts[i]);
+  server = hosts[i];
+  print(server);
+
+  if(getServerNumPortsRequired(server) <= 1) {
+    print("Deploying...");
+    if(hasRootAccess(server) == false) {
+      if(fileExists("BruteSSH.exe", "home")) {
+        brutessh(server);
+      }
+      nuke(server);
+    }
+    scp(file, server);
+    killall(server);
+    maxScript = Math.floor(getServerMaxRam(server)/getScriptRam(file));
+    exec(file, server, maxScript);
+
+  } else {
+    print("Too high security, skipping...");
+  }
+  
+
 }
-*/
 
 
-for(var i = 0; i < 2; i++) {
+print("Moving on to buying / upsizing servers...");
+for(var i = 0; i < 25; i++) {
   server = "player-server-" + i;
+  print(server);
   if(serverExists(server) == false) {
     print("Server does not exist: " + server);
-    
     while(getServerMoneyAvailable("home") < getPurchasedServerCost(ram)) {
       print("Not enough money to purchase server, sleeping...");
       sleep(5000);
     }
+    print("Buying server")
     purchaseServer(server, ram);
-    scp(file, server);
-    maxScript = Math.floor(getServerMaxRam(server)/getScriptRam(file));
-    exec(file, server, maxScript);      
-  }
-}
-
-while(true);
-
-
-/*
-Delete all servers:
-
-servers = getPurchasedServers();
-print(servers);
-for(var i = 0; i < servers.length; i++) {
-  deleteServer(servers[i]);
-}
-while(true);
-
-*/
-
-
-
-
-var ram = 8;
-
-var i = 0;
-while (i < getPurchasedServerLimit()) {
-  print("Next server cost: " + getPurchasedServerCost(ram));
-    if (getServerMoneyAvailable("home") > getPurchasedServerCost(ram)) {
-        var hostname = purchaseServer("pserv-" + i, ram);
-        scp("farm.script", hostname);
-        exec("farm.script", hostname, 3);
-        ++i;
+  } else {
+    print("Server exists: " + server);
+    if(getServerMaxRam(server) == ram) {
+      print("Server has correct amount of ram, killing processes (for restart)");
+      killall(server);
+    } else {
+      print("Server has wrong amount of ram, deleting");
+      killall(server);
+      deleteServer(server);
+      while(getServerMoneyAvailable("home") < getPurchasedServerCost(ram)) {
+        print("Not enough money to purchase server, sleeping...");
+        sleep(5000);
+      }
+      print("Buying server")
+      purchaseServer(server, ram);
     }
+  }
+  scp(file, server);
+  maxScript = Math.floor(getServerMaxRam(server)/getScriptRam(file));
+  exec(file, server, maxScript);      
 }
 
-
-
-var file = args[0];
-var target = args[1];
-
-print("Deploying " + file + " to " + target);
-
-if(hasRootAccess(target) == false) {
-	if(fileExists("BruteSSH.exe", "home")) {
-		brutessh(target);
-	}
-	nuke(target);
-}
-
-scp(file, target);
-killall(target);
-
-maxScript = Math.floor(getServerMaxRam(target)/getScriptRam(file));
-print("Max scripts on server " + target + " is " + maxScript);
-
-exec(file, target, maxScript);
+while(true);
